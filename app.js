@@ -93,18 +93,43 @@ function init(){const id=$('client').value.trim();if(!/^[0-9a-f-]{36}$/i.test(id
 async function token(){if(!client)init();if(!account){const r=await client.loginPopup({scopes:['Files.ReadWrite','User.Read']});account=r.account}try{return (await client.acquireTokenSilent({account,scopes:['Files.ReadWrite']})).accessToken}catch{return (await client.acquireTokenPopup({account,scopes:['Files.ReadWrite']})).accessToken}}
 async function graph(path,options={}){const t=await token();const res=await fetch('https://graph.microsoft.com/v1.0'+path,{...options,headers:{Authorization:'Bearer '+t,...options.headers}});if(!res.ok)throw Error('Microsoft OneDrive error '+res.status+': '+(await res.text()).slice(0,350));return res}
 async function listFiles(){
-  const path='/me/drive/root:/Documents/Medical/Workout_Master.xlsx?$select=id,name,eTag,parentReference';
-  let file;
+  status('Looking for Workout_Master.xlsx in OneDrive…');
+  const exact='/me/drive/root:/Documents/Medical/Workout_Master.xlsx?$select=id,name,eTag,parentReference';
+  let files=[], exactError='';
   try {
-    const r=await graph(path);
-    file=await r.json();
-  } catch(e) {
-    throw Error('Could not find Documents/Medical/Workout_Master.xlsx in the signed-in OneDrive account. Confirm you signed in with the same personal Microsoft account used in OneDrive. Details: '+e.message);
+    const r=await graph(exact);
+    const file=await r.json();
+    if(file.id && file.name==='Workout_Master.xlsx') files=[file];
+  } catch(e) { exactError=e.message; }
+  if(!files.length){
+    // OneDrive Personal can have a different cloud folder structure than the PC's synced path.
+    // Search by filename, then let the user select the correct file if duplicates exist.
+    try {
+      let url="/me/drive/root/search(q='Workout_Master.xlsx')?$select=id,name,eTag,parentReference,file&$top=100";
+      for(let page=0;url && page<10;page++){
+        const r=await graph(url);
+        const result=await r.json();
+        files.push(...(result.value||[]).filter(f=>f.name?.toLowerCase()==='workout_master.xlsx' && f.file));
+        const next=result['@odata.nextLink'];
+        url=next ? next.replace(/^https:\/\/graph\.microsoft\.com\/v1\.0/,'') : null;
+      }
+    } catch(e){
+      throw Error('Unable to search OneDrive. '+e.message+(exactError?' Exact-path result: '+exactError:''));
+    }
   }
-  window.foundFiles=[file];
-  $('files').innerHTML='<option value="0">Workout_Master.xlsx (Documents / Medical)</option>';
+  files=[...new Map(files.map(f=>[f.id,f])).values()];
+  if(!files.length)throw Error('Workout_Master.xlsx was not found in this Microsoft account. Check that you signed in with the OneDrive Personal account containing the workbook. Exact-path result: '+(exactError||'No matching file'));
+  window.foundFiles=files;
+  $('files').innerHTML='';
+  for(let i=0;i<files.length;i++){
+    const f=files[i];
+    const option=document.createElement('option');
+    option.value=String(i);
+    option.textContent=f.name+' — '+(f.parentReference?.path||'OneDrive folder');
+    $('files').appendChild(option);
+  }
   $('files').value='0';
-  status('Found Workout_Master.xlsx in Documents / Medical. Click Use selected workbook.');
+  status(files.length===1?'Found Workout_Master.xlsx. Click Use selected workbook.':'Found '+files.length+' matching workbooks. Select the correct folder, then click Use selected workbook.');
 }
 $('signin').onclick=async()=>{try{await token();status('Microsoft sign-in successful. Now find your workbook.')}catch(e){status(e.message)}};
 $('choose').onclick=async()=>{try{await listFiles()}catch(e){status(e.message)}};
