@@ -6,4 +6,39 @@
 <section id="entry" class="hidden"><div class="step" id="step"></div><h2 id="exercise"></h2><div class="illustration" id="drawing"></div><p id="muscles" class="muted"></p><p id="cue"></p><p class="pill" id="previous">Previous: —</p><div class="grid"><div><label for="weight">Weight (lb)</label><input id="weight" type="text" placeholder="40"></div><div><label for="reps">Reps / seconds</label><input id="reps" type="text" placeholder="12x12x10"></div><div><label for="rir">Reps left (RIR)</label><input id="rir" type="number" min="0" max="10" placeholder="2"></div></div><div class="actions"><button class="secondary" id="prev">Previous</button><button id="next">Next</button></div></section>
 <section id="finish" class="hidden"><h2>Complete workout</h2><label for="minutes">10. Workout Time (minutes)</label><input type="number" min="1" max="600" id="minutes" placeholder="55"><p class="muted">Save updates the exercise blocks in Sheet1. It checks for changes to the master before uploading.</p><button id="save">Save to OneDrive</button></section>
 <section><h2>Status</h2><p id="status" class="status muted">Ready to set up.</p><p class="notice"><small>Always verify the first saved session in Excel. This app must be hosted at the exact URL registered in Microsoft Entra. Do not use a local file URL.</small></p></section>
-</main><script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script><script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script><script src="app.js"></script></body></html>
+</main><script>
+// Load authentication first; try Microsoft's CDN and a second CDN if necessary.
+(function () {
+  const sources = [
+    'https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js',
+    'https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js',
+    'https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js'
+  ];
+  function load(url) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = url;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+  async function start() {
+    for (const url of sources) {
+      try { await load(url); if (typeof window.msal !== 'undefined') break; } catch (_) {}
+    }
+    if (typeof window.msal === 'undefined') {
+      document.getElementById('status').textContent = 'Microsoft sign-in library could not load. Please check browser extensions or network blocking and refresh.';
+      return;
+    }
+    try {
+      await load('https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js');
+      if (typeof window.ExcelJS === 'undefined') throw new Error('Excel library unavailable');
+      await load('app.js');
+    } catch (err) {
+      document.getElementById('status').textContent = 'App setup could not finish loading: ' + err.message;
+    }
+  }
+  start();
+})();
+</script></body></html>
