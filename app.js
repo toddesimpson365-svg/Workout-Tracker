@@ -61,12 +61,29 @@ function sketch(n){
 const muscleGroups={
 'Flat Dumbbell Bench Press':['chest','triceps','shoulders'],'Incline Dumbbell Press':['chest','shoulders','triceps'],'Alternating Biceps Curl':['biceps','forearms'],'Single-Arm Dumbbell Row':['back','biceps'],'Bulgarian Split Squat':['quads','glutes'],'Reverse Crunch':['abs'],'Forearm Plank':['abs','shoulders'],'Farmer’s Carry':['forearms','back','abs'],'Calf Lifts':['calves'],'Hammer Curls':['biceps','forearms'],'Lying Dumbbell Triceps Extension':['triceps'],'Seated Dumbbell Shoulder Press':['shoulders','triceps'],'Dumbbell Lateral Raises':['shoulders'],'Neutral-Grip Dumbbell Floor Press':['chest','triceps'],'Dumbbell Romanian Deadlift':['hamstrings','glutes','back'],'Weighted Crunch':['abs'],'Side Plank':['abs']};
 function anatomy(n){
- const groups=muscleGroups[n]||[];
- const on=k=>groups.includes(k)?'#f47738':'#d6dfe7';
- const line='#8c9ead';
- const front=`<g stroke="${line}" stroke-width="1.1" stroke-linejoin="round"><ellipse cx="78" cy="28" rx="14" ry="19" fill="#d6dfe7"/><path d="M66 47 L90 47 L95 62 L61 62Z" fill="#d6dfe7"/><path d="M63 60 Q78 55 93 60 L99 125 Q78 139 57 125Z" fill="#d6dfe7"/><path d="M60 64 Q47 58 41 77 L31 120 L43 124 L55 88Z M96 64 Q109 58 115 77 L125 120 L113 124 L101 88Z" fill="${on('shoulders')}"/><path d="M33 120 L29 164 L40 167 L44 122Z M112 122 L116 167 L127 164 L123 120Z" fill="${on('forearms')}"/><path d="M60 129 L78 134 L75 187 L61 187 L54 155Z M78 134 L96 129 L102 155 L95 187 L81 187Z" fill="${on('quads')}"/><path d="M61 188 L75 188 L73 231 L61 231Z M81 188 L95 188 L95 231 L83 231Z" fill="${on('calves')}"/><path d="M62 62 Q78 58 94 62 L90 91 Q78 101 66 91Z" fill="${on('chest')}"/><path d="M65 94 L91 94 L92 125 L64 125Z" fill="${on('abs')}"/><path d="M44 85 L54 91 L45 124 L34 121Z M102 91 L112 85 L122 121 L111 124Z" fill="${on('biceps')}"/><path d="M58 69 L48 84 L42 112 L52 114 L62 88Z M98 69 L108 84 L114 112 L104 114 L94 88Z" fill="none" stroke="${on('triceps')}" stroke-width="5"/></g>`;
- const back=`<g stroke="${line}" stroke-width="1.1" stroke-linejoin="round"><ellipse cx="178" cy="28" rx="14" ry="19" fill="#d6dfe7"/><path d="M166 47 L190 47 L195 62 L161 62Z" fill="#d6dfe7"/><path d="M162 60 Q178 55 194 60 L200 125 Q178 139 156 125Z" fill="${on('back')}"/><path d="M160 64 Q147 58 141 77 L131 120 L143 124 L155 88Z M196 64 Q209 58 215 77 L225 120 L213 124 L201 88Z" fill="${on('shoulders')}"/><path d="M133 120 L129 164 L140 167 L144 122Z M212 122 L216 167 L227 164 L223 120Z" fill="${on('forearms')}"/><path d="M159 129 L177 134 L175 187 L161 187 L154 155Z M179 134 L197 129 L202 155 L195 187 L181 187Z" fill="${on('hamstrings')}"/><path d="M161 188 L175 188 L173 231 L161 231Z M181 188 L195 188 L195 231 L183 231Z" fill="${on('calves')}"/><path d="M158 124 Q178 130 198 124 L197 145 Q178 154 159 145Z" fill="${on('glutes')}"/><path d="M145 83 L155 89 L145 125 L134 121Z M202 89 L212 83 L222 121 L211 125Z" fill="${on('triceps')}"/></g>`;
- return `<div class="anatomy-wrap"><svg viewBox="0 0 258 245" role="img" aria-label="Front and back anatomy with highlighted muscles for ${n}"><rect width="258" height="245" rx="12" fill="#f7fafc"/>${front}${back}<g fill="#537087" font-size="11" text-anchor="middle"><text x="78" y="243">FRONT</text><text x="178" y="243">BACK</text></g></svg><div class="anatomy-legend"><span><i></i> ${groups.map(g=>g.charAt(0).toUpperCase()+g.slice(1)).join(' · ')}</span></div></div>`;
+ const a=names.A.indexOf(n),b=names.B.indexOf(n);
+ const bPhotos=['b_hammer','b_triceps','b_shoulder','b_lateral','b_floor','b_rdl','b_weighted','b_side','b_calf'];
+ const file=a>=0?`a${a+1}`:b>=0?bPhotos[b]:null;
+ const labels={
+ 'Flat Dumbbell Bench Press':['Pectoralis major','Triceps brachii','Anterior deltoids'],
+ 'Incline Dumbbell Press':['Upper pectoralis major','Anterior deltoids','Triceps brachii'],
+ 'Alternating Biceps Curl':['Biceps brachii','Brachialis','Forearm flexors'],
+ 'Single-Arm Dumbbell Row':['Latissimus dorsi','Rhomboids / trapezius','Biceps brachii'],
+ 'Bulgarian Split Squat':['Quadriceps','Gluteus maximus','Hamstrings'],
+ 'Reverse Crunch':['Rectus abdominis','Deep abdominal stabilizers'],
+ 'Forearm Plank':['Rectus abdominis','Obliques','Shoulder stabilizers'],
+ 'Farmer’s Carry':['Forearm / grip muscles','Upper trapezius','Core stabilizers'],
+ 'Calf Lifts':['Gastrocnemius','Soleus'],
+ 'Hammer Curls':['Brachialis','Biceps brachii','Brachioradialis'],
+ 'Lying Dumbbell Triceps Extension':['Triceps brachii'],
+ 'Seated Dumbbell Shoulder Press':['Deltoids','Triceps brachii'],
+ 'Dumbbell Lateral Raises':['Middle deltoids','Supraspinatus'],
+ 'Neutral-Grip Dumbbell Floor Press':['Pectoralis major','Triceps brachii'],
+ 'Dumbbell Romanian Deadlift':['Hamstrings','Gluteus maximus','Spinal erectors'],
+ 'Weighted Crunch':['Rectus abdominis','Obliques'],
+ 'Side Plank':['Obliques','Transverse abdominis','Gluteus medius']};
+ const items=labels[n]||muscleGroups[n]||[];
+ return `<div class="anatomy-wrap"><img class="anatomy-image" src="assets/anatomy_${file}.webp" alt="Detailed front and back muscular anatomy, with worked muscles highlighted in orange for ${n}" loading="eager"><div class="anatomy-view-labels"><span>FRONT</span><span>BACK</span></div><div class="anatomy-key">${items.map((m,i)=>`<span><i style="background:${['#e95716','#f38a45','#f7b287'][Math.min(i,2)]}"></i>${m}</span>`).join('')}</div></div>`;
 }
 const tips={
 'Flat Dumbbell Bench Press':['Plant feet and pinch shoulder blades gently against bench.','Lower dumbbells toward mid-chest with elbows roughly 45° out.','Press smoothly upward, keeping wrists stacked over elbows.','Flaring elbows wide or bouncing at the bottom.'],
