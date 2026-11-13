@@ -28,7 +28,20 @@ $('client').value=localStorage.getItem('workoutClientId')||'';
 function init(){const id=$('client').value.trim();if(!/^[0-9a-f-]{36}$/i.test(id))throw Error('Enter the Microsoft application (client) ID from your app registration.');if(typeof msal==='undefined')throw Error('Microsoft sign-in library did not load. Check your internet connection or browser content blocking, then refresh.');localStorage.setItem('workoutClientId',id);client=new msal.PublicClientApplication({auth:{clientId:id,authority:'https://login.microsoftonline.com/consumers',redirectUri:location.origin+location.pathname},cache:{cacheLocation:'sessionStorage'}});account=client.getAllAccounts()[0];}
 async function token(){if(!client)init();if(!account){const r=await client.loginPopup({scopes:['Files.ReadWrite','User.Read']});account=r.account}try{return (await client.acquireTokenSilent({account,scopes:['Files.ReadWrite']})).accessToken}catch{return (await client.acquireTokenPopup({account,scopes:['Files.ReadWrite']})).accessToken}}
 async function graph(path,options={}){const t=await token();const res=await fetch('https://graph.microsoft.com/v1.0'+path,{...options,headers:{Authorization:'Bearer '+t,...options.headers}});if(!res.ok)throw Error('Microsoft OneDrive error '+res.status+': '+(await res.text()).slice(0,350));return res}
-async function listFiles(){let url='/me/drive/root/search(q=\'Workout\')?$select=id,name,eTag,parentReference&$top=100';const r=await graph(url);const data=await r.json();const files=data.value.filter(x=>/\.xlsx$/i.test(x.name));$('files').innerHTML='<option value="">Choose the master workbook</option>'+files.map((f,i)=>`<option value="${i}">${f.name.replaceAll('<','&lt;')} (${f.parentReference?.path||'OneDrive'})</option>`).join('');window.foundFiles=files;status(`Found ${files.length} Excel workbook(s). Select the master.`)}
+async function listFiles(){
+  const path='/me/drive/root:/Documents/Medical/Workout_Master.xlsx?$select=id,name,eTag,parentReference';
+  let file;
+  try {
+    const r=await graph(path);
+    file=await r.json();
+  } catch(e) {
+    throw Error('Could not find Documents/Medical/Workout_Master.xlsx in the signed-in OneDrive account. Confirm you signed in with the same personal Microsoft account used in OneDrive. Details: '+e.message);
+  }
+  window.foundFiles=[file];
+  $('files').innerHTML='<option value="0">Workout_Master.xlsx (Documents / Medical)</option>';
+  $('files').value='0';
+  status('Found Workout_Master.xlsx in Documents / Medical. Click Use selected workbook.');
+}
 $('signin').onclick=async()=>{try{await token();status('Microsoft sign-in successful. Now find your workbook.')}catch(e){status(e.message)}};
 $('choose').onclick=async()=>{try{await listFiles()}catch(e){status(e.message)}};
 $('usefile').onclick=async()=>{try{const i=$('files').value;if(i==='')throw Error('Select a workbook first.');selected=window.foundFiles[+i];sessionStorage.setItem('workoutFile',JSON.stringify(selected));$('chosen').textContent='Master: '+selected.name;await loadBook();status('Master workbook loaded. Ready to start workout.')}catch(e){status(e.message)}};
