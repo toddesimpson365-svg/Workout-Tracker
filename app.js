@@ -83,7 +83,7 @@ function anatomy(n){
  'Weighted Crunch':['Rectus abdominis','Obliques'],
  'Side Plank':['Obliques','Transverse abdominis','Gluteus medius']};
  const items=labels[n]||muscleGroups[n]||[];
- return `<div class="anatomy-wrap"><img class="anatomy-image" src="assets/anatomy_${file}.webp" alt="Detailed front and back muscular anatomy, with worked muscles highlighted in orange for ${n}" loading="eager"><div class="anatomy-view-labels"><span>FRONT</span><span>BACK</span></div><div class="anatomy-key">${items.map((m,i)=>`<span><i style="background:${['#e95716','#f38a45','#f7b287'][Math.min(i,2)]}"></i>${m}</span>`).join('')}</div></div>`;
+ return `<div class="anatomy-wrap"><img class="anatomy-image" src="assets/detailed_v2_anatomy_${file}.webp?v=2" alt="Detailed front and back muscular anatomy, with worked muscles highlighted in orange for ${n}" loading="eager"><div class="anatomy-view-labels"><span>FRONT</span><span>BACK</span></div><div class="anatomy-key">${items.map((m,i)=>`<span><i style="background:${['#e95716','#f38a45','#f7b287'][Math.min(i,2)]}"></i>${m}</span>`).join('')}</div></div>`;
 }
 const tips={
 'Flat Dumbbell Bench Press':['Plant feet and pinch shoulder blades gently against bench.','Lower dumbbells toward mid-chest with elbows roughly 45° out.','Press smoothly upward, keeping wrists stacked over elbows.','Flaring elbows wide or bouncing at the bottom.'],
